@@ -121,7 +121,7 @@ bool N(OutPointVerify)(N(OutPoint) * p, bool compatible) {
   if (p->s.length != AMIC_OUTPOINT_SIZE) {
     return false;
   }
-  Hash h = N(OutPointTxHash)(p);
+  N(Hash) h = N(OutPointTxHash)(p);
   return N(HashVerify)(&h, compatible);
 }
 
@@ -310,6 +310,32 @@ N(Script) N(CellOutputType)(N(Script) * s) {
   N(Script) type;
   type.s = uncheckedField(&s->s, 2, true);
   return type;
+}
+
+typedef struct {
+  N(Slice) s;
+} N(CellDep);
+
+N(OutPoint) N(CellDepOutPoint)(N(CellDep) * c) {
+  N(OutPoint) o;
+  o.s = N(SliceSlice)(&c->s, 0, 36);
+  return o;
+}
+
+N(DepType) N(CellDepDepType)(N(CellDep) * c) {
+  N(DepType) d;
+  d.s = N(SliceSlice)(&c->s, 36, 37);
+  return d;
+}
+
+bool N(CellDepVerify)(N(CellDep) * c, bool compatible) {
+  if (c->s.length != AMIC_CELLDEP_SIZE) {
+    return false;
+  }
+  N(OutPoint) o = N(CellDepOutPoint)(c);
+  N(DepType) d = N(CellDepDepType)(c);
+  return (N(OutPointVerify)(&o, compatible)) &&
+         (N(DepTypeVerify)(&d, compatible));
 }
 
 #undef N
